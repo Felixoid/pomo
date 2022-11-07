@@ -21,11 +21,20 @@ The Pomodoro Technique is simple and effective:
 ### Source
 
  ```bash
- git clone git@github.com:kevinschoon/pomo.git
+ git clone git@codeberg.org:kevinschoon/pomo.git
  cd pomo
  make
  # copy pomo somewhere on your $PATH
  cp bin/pomo ~/bin/
+ ```
+
+#### Windows
+ ```bash
+git clone git@codeberg.org:kevinschoon/pomo.git
+cd pomo/cmd/pomo
+go build
+
+# pomo.exe will no be available. Add to PATH 
  ```
 
 ### Package Managers
