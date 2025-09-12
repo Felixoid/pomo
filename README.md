@@ -18,6 +18,12 @@ The Pomodoro Technique is simple and effective:
 
 ## Installation
 
+### From go proxy
+
+```bash
+go install codeberg.org/kevinschoon/pomo/cmd/pomo@latest
+```
+
 ### Source
 
  ```bash
