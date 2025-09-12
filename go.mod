@@ -1,6 +1,6 @@
-module github.com/kevinschoon/pomo
+module codeberg.org/kevinschoon/pomo
 
-go 1.15
+go 1.23
 
 require (
 	github.com/0xAX/notificator v0.0.0-20220220101646-ee9b8921e557
