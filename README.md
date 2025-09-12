@@ -40,7 +40,7 @@ git clone git@codeberg.org:kevinschoon/pomo.git
 cd pomo/cmd/pomo
 go build
 
-# pomo.exe will no be available. Add to PATH 
+# pomo.exe won't be available. Add the $GOPATH/bin to your $PATH manually
  ```
 
 ### Package Managers
