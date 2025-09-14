@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	pomo "github.com/kevinschoon/pomo/pkg/internal"
+	pomo "codeberg.org/kevinschoon/pomo/pkg/internal"
 )
 
 func checkErr(t *testing.T, err error) {

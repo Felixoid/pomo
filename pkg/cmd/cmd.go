@@ -14,7 +14,7 @@ import (
 	"github.com/adrg/xdg"
 	cli "github.com/jawher/mow.cli"
 
-	pomo "github.com/kevinschoon/pomo/pkg/internal"
+	pomo "codeberg.org/kevinschoon/pomo/pkg/internal"
 )
 
 func maybe(err error) {
