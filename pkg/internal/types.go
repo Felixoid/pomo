@@ -90,6 +90,28 @@ func After(start time.Time, tasks []*Task) []*Task {
 	return filtered
 }
 
+// Unfinished returns tasks that have not completed all pomodoros.
+func Unfinished(tasks []*Task) []*Task {
+	filtered := []*Task{}
+	for _, task := range tasks {
+		if len(task.Pomodoros) < task.NPomodoros {
+			filtered = append(filtered, task)
+		}
+	}
+	return filtered
+}
+
+// Finished returns tasks that have completed all pomodoros.
+func Finished(tasks []*Task) []*Task {
+	filtered := []*Task{}
+	for _, task := range tasks {
+		if len(task.Pomodoros) >= task.NPomodoros {
+			filtered = append(filtered, task)
+		}
+	}
+	return filtered
+}
+
 // Pomodoro is a unit of time to spend working
 // on a single task.
 type Pomodoro struct {

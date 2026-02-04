@@ -170,11 +170,13 @@ func list(config *pomo.Config) func(*cli.Cmd) {
 	return func(cmd *cli.Cmd) {
 		cmd.Spec = "[OPTIONS]"
 		var (
-			asJSON   = cmd.BoolOpt("json", false, "output task history as JSON")
-			assend   = cmd.BoolOpt("assend", false, "sort tasks assending in age")
-			all      = cmd.BoolOpt("a all", true, "output all tasks")
-			limit    = cmd.IntOpt("n limit", 0, "limit the number of results by n")
-			duration = cmd.StringOpt("d duration", "24h", "show tasks within this duration")
+			asJSON     = cmd.BoolOpt("json", false, "output task history as JSON")
+			assend     = cmd.BoolOpt("assend", false, "sort tasks assending in age")
+			all        = cmd.BoolOpt("a all", true, "output all tasks")
+			unfinished = cmd.BoolOpt("u unfinished", false, "show only unfinished tasks")
+			finished   = cmd.BoolOpt("f finished", false, "show only finished tasks")
+			limit      = cmd.IntOpt("n limit", 0, "limit the number of results by n")
+			duration   = cmd.StringOpt("d duration", "24h", "show tasks within this duration")
 		)
 		cmd.Action = func() {
 			duration, err := time.ParseDuration(*duration)
@@ -190,6 +192,12 @@ func list(config *pomo.Config) func(*cli.Cmd) {
 				}
 				if !*all {
 					tasks = pomo.After(time.Now().Add(-duration), tasks)
+				}
+				if *unfinished {
+					tasks = pomo.Unfinished(tasks)
+				}
+				if *finished {
+					tasks = pomo.Finished(tasks)
 				}
 				if *limit > 0 && (len(tasks) > *limit) {
 					tasks = tasks[0:*limit]

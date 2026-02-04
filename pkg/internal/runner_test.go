@@ -125,3 +125,32 @@ func TestStoreUpdateTask(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestFilterUnfinishedAndFinished(t *testing.T) {
+	tasks := []*Task{
+		{ID: 1, NPomodoros: 4, Pomodoros: []*Pomodoro{{}, {}, {}}},         // unfinished: 3/4
+		{ID: 2, NPomodoros: 2, Pomodoros: []*Pomodoro{{}, {}}},             // finished: 2/2
+		{ID: 3, NPomodoros: 3, Pomodoros: []*Pomodoro{}},                   // unfinished: 0/3
+		{ID: 4, NPomodoros: 1, Pomodoros: []*Pomodoro{{}}},                 // finished: 1/1
+		{ID: 5, NPomodoros: 5, Pomodoros: []*Pomodoro{{}, {}, {}, {}, {}}}, // finished: 5/5
+	}
+
+	// Test Unfinished filter
+	unfinished := Unfinished(tasks)
+	if len(unfinished) != 2 {
+		t.Fatalf("expected 2 unfinished tasks, got %d", len(unfinished))
+	}
+	if unfinished[0].ID != 1 || unfinished[1].ID != 3 {
+		t.Fatalf("expected unfinished task IDs [1, 3], got [%d, %d]", unfinished[0].ID, unfinished[1].ID)
+	}
+
+	// Test Finished filter
+	finished := Finished(tasks)
+	if len(finished) != 3 {
+		t.Fatalf("expected 3 finished tasks, got %d", len(finished))
+	}
+	if finished[0].ID != 2 || finished[1].ID != 4 || finished[2].ID != 5 {
+		t.Fatalf("expected finished task IDs [2, 4, 5], got [%d, %d, %d]",
+			finished[0].ID, finished[1].ID, finished[2].ID)
+	}
+}
