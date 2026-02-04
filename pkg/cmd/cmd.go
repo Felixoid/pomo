@@ -227,6 +227,8 @@ pomo edit -d 30m 1
 pomo edit -m "updated description" 1
 # edit multiple fields
 pomo edit -d 45m -p 6 -m "new message" 1
+# mark task as finished
+pomo edit -f 1
 `
 		var (
 			taskID    = cmd.IntArg("TASK_ID", -1, "ID of task to edit")
@@ -234,6 +236,7 @@ pomo edit -d 45m -p 6 -m "new message" 1
 			pomodoros = cmd.IntOpt("p pomodoros", -1, "new number of pomodoros")
 			message   = cmd.StringOpt("m message", "", "new descriptive name of the task")
 			tags      = cmd.StringsOpt("t tag", []string{}, "new tags associated with this task")
+			finish    = cmd.BoolOpt("f finish", false, "mark task as finished (set required pomodoros to current completed count)")
 		)
 		cmd.Action = func() {
 			if *taskID == -1 {
@@ -251,6 +254,14 @@ pomo edit -d 45m -p 6 -m "new message" 1
 					return fmt.Errorf("failed to read task: %w", err)
 				}
 
+				// Store original values for summary
+				origDuration := task.Duration
+				origPomodoros := task.NPomodoros
+				origMessage := task.Message
+				origTags := make([]string, len(task.Tags))
+				copy(origTags, task.Tags)
+
+				var changes strings.Builder
 				updated := false
 
 				if *duration != "" {
@@ -259,26 +270,36 @@ pomo edit -d 45m -p 6 -m "new message" 1
 						return fmt.Errorf("invalid duration: %w", err)
 					}
 					task.Duration = parsed
+					fmt.Fprintf(&changes, "  duration: %v -> %v\n", origDuration, parsed)
 					updated = true
 				}
 
 				if *pomodoros != -1 {
 					task.NPomodoros = *pomodoros
+					fmt.Fprintf(&changes, "  pomodoros: %d -> %d\n", origPomodoros, *pomodoros)
 					updated = true
 				}
 
 				if *message != "" {
 					task.Message = *message
+					fmt.Fprintf(&changes, "  message: %q -> %q\n", origMessage, *message)
 					updated = true
 				}
 
 				if len(*tags) > 0 {
 					task.Tags = *tags
+					fmt.Fprintf(&changes, "  tags: %v -> %v\n", origTags, *tags)
+					updated = true
+				}
+
+				if *finish {
+					task.NPomodoros = len(task.Pomodoros)
+					fmt.Fprintf(&changes, "  pomodoros: %d -> %d (marked as finished)\n", origPomodoros, len(task.Pomodoros))
 					updated = true
 				}
 
 				if !updated {
-					return fmt.Errorf("no fields specified for update. Use -d, -p, -m, or -t flags")
+					return fmt.Errorf("no fields specified for update. Use -d, -p, -m, -t, or -f flags")
 				}
 
 				err = db.UpdateTask(tx, *taskID, *task)
@@ -286,7 +307,7 @@ pomo edit -d 45m -p 6 -m "new message" 1
 					return fmt.Errorf("failed to update task: %w", err)
 				}
 
-				fmt.Printf("updated task %d\n", *taskID)
+				fmt.Printf("Updated task %d:\n%s", *taskID, changes.String())
 				return nil
 			}))
 		}
