@@ -95,6 +95,13 @@ func (s Store) ReadTasks(tx *sql.Tx) ([]*Task, error) {
 	return tasks, nil
 }
 
+func (s Store) UpdateTask(tx *sql.Tx, taskID int, task Task) error {
+	_, err := tx.Exec(
+		"UPDATE task SET message=$1, pomodoros=$2, duration=$3, tags=$4 WHERE rowid=$5",
+		task.Message, task.NPomodoros, task.Duration.String(), strings.Join(task.Tags, ","), taskID)
+	return err
+}
+
 func (s Store) DeleteTask(tx *sql.Tx, taskID int) error {
 	_, err := tx.Exec("DELETE FROM task WHERE rowid = $1", &taskID)
 	if err != nil {

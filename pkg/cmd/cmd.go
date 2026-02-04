@@ -206,6 +206,85 @@ func list(config *pomo.Config) func(*cli.Cmd) {
 	}
 }
 
+func edit(config *pomo.Config) func(*cli.Cmd) {
+	return func(cmd *cli.Cmd) {
+		cmd.Spec = "[OPTIONS] TASK_ID"
+		cmd.LongDesc = `
+edit an existing task by ID
+
+## Examples:
+# edit task duration
+pomo edit -d 30m 1
+# edit task message
+pomo edit -m "updated description" 1
+# edit multiple fields
+pomo edit -d 45m -p 6 -m "new message" 1
+`
+		var (
+			taskID    = cmd.IntArg("TASK_ID", -1, "ID of task to edit")
+			duration  = cmd.StringOpt("d duration", "", "new duration of each stent")
+			pomodoros = cmd.IntOpt("p pomodoros", -1, "new number of pomodoros")
+			message   = cmd.StringOpt("m message", "", "new descriptive name of the task")
+			tags      = cmd.StringsOpt("t tag", []string{}, "new tags associated with this task")
+		)
+		cmd.Action = func() {
+			if *taskID == -1 {
+				fmt.Println("Error: TASK_ID is required")
+				os.Exit(1)
+			}
+
+			db, err := pomo.NewStore(config.DBPath)
+			maybe(err)
+			defer db.Close()
+
+			maybe(db.With(func(tx *sql.Tx) error {
+				task, err := db.ReadTask(tx, *taskID)
+				if err != nil {
+					return fmt.Errorf("failed to read task: %w", err)
+				}
+
+				updated := false
+
+				if *duration != "" {
+					parsed, err := time.ParseDuration(*duration)
+					if err != nil {
+						return fmt.Errorf("invalid duration: %w", err)
+					}
+					task.Duration = parsed
+					updated = true
+				}
+
+				if *pomodoros != -1 {
+					task.NPomodoros = *pomodoros
+					updated = true
+				}
+
+				if *message != "" {
+					task.Message = *message
+					updated = true
+				}
+
+				if len(*tags) > 0 {
+					task.Tags = *tags
+					updated = true
+				}
+
+				if !updated {
+					return fmt.Errorf("no fields specified for update. Use -d, -p, -m, or -t flags")
+				}
+
+				err = db.UpdateTask(tx, *taskID, *task)
+				if err != nil {
+					return fmt.Errorf("failed to update task: %w", err)
+				}
+
+				fmt.Printf("updated task %d\n", *taskID)
+				return nil
+			}))
+		}
+	}
+}
+
 func _delete(config *pomo.Config) func(*cli.Cmd) {
 	return func(cmd *cli.Cmd) {
 		cmd.Spec = "[OPTIONS] [TASK_ID...]"
@@ -302,6 +381,7 @@ func New(config *pomo.Config) *cli.Cli {
 	app.Command("create c", "create a new task without starting", create(config))
 	app.Command("begin b", "begin requested pomodoro", begin(config))
 	app.Command("list l", "list historical tasks", list(config))
+	app.Command("edit e", "edit a stored task", edit(config))
 	app.Command("delete d", "delete a stored task", _delete(config))
 	app.Command("status st", "output the current status", _status(config))
 	return app
