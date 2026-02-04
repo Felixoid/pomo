@@ -175,6 +175,7 @@ func list(config *pomo.Config) func(*cli.Cmd) {
 			all        = cmd.BoolOpt("a all", true, "output all tasks")
 			unfinished = cmd.BoolOpt("u unfinished", false, "show only unfinished tasks")
 			finished   = cmd.BoolOpt("f finished", false, "show only finished tasks")
+			tags       = cmd.StringsOpt("t tag", []string{}, "filter by tag (can be specified multiple times)")
 			limit      = cmd.IntOpt("n limit", 0, "limit the number of results by n")
 			duration   = cmd.StringOpt("d duration", "24h", "show tasks within this duration")
 		)
@@ -198,6 +199,9 @@ func list(config *pomo.Config) func(*cli.Cmd) {
 				}
 				if *finished {
 					tasks = pomo.Finished(tasks)
+				}
+				if len(*tags) > 0 {
+					tasks = pomo.WithTag(*tags, tasks)
 				}
 				if *limit > 0 && (len(tasks) > *limit) {
 					tasks = tasks[0:*limit]

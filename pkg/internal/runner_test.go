@@ -154,3 +154,40 @@ func TestFilterUnfinishedAndFinished(t *testing.T) {
 			finished[0].ID, finished[1].ID, finished[2].ID)
 	}
 }
+
+func TestFilterByTag(t *testing.T) {
+	tasks := []*Task{
+		{ID: 1, Tags: []string{"work", "urgent"}},
+		{ID: 2, Tags: []string{"personal"}},
+		{ID: 3, Tags: []string{"work", "review"}},
+		{ID: 4, Tags: []string{"urgent", "bug"}},
+		{ID: 5, Tags: []string{}},
+	}
+
+	// Filter by single tag
+	workTasks := WithTag([]string{"work"}, tasks)
+	if len(workTasks) != 2 {
+		t.Fatalf("expected 2 tasks with 'work' tag, got %d", len(workTasks))
+	}
+	if workTasks[0].ID != 1 || workTasks[1].ID != 3 {
+		t.Fatalf("expected task IDs [1, 3], got [%d, %d]", workTasks[0].ID, workTasks[1].ID)
+	}
+
+	// Filter by multiple tags (OR logic)
+	multiTags := WithTag([]string{"urgent", "personal"}, tasks)
+	if len(multiTags) != 3 {
+		t.Fatalf("expected 3 tasks with 'urgent' or 'personal' tag, got %d", len(multiTags))
+	}
+
+	// Filter with no results
+	noMatch := WithTag([]string{"nonexistent"}, tasks)
+	if len(noMatch) != 0 {
+		t.Fatalf("expected 0 tasks with 'nonexistent' tag, got %d", len(noMatch))
+	}
+
+	// Empty filter returns all
+	allTasks := WithTag([]string{}, tasks)
+	if len(allTasks) != 5 {
+		t.Fatalf("expected 5 tasks with empty filter, got %d", len(allTasks))
+	}
+}
