@@ -3,7 +3,6 @@ package pomo
 import (
 	"database/sql"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"testing"
@@ -11,7 +10,12 @@ import (
 )
 
 func TestTaskRunner(t *testing.T) {
-	baseDir, _ := ioutil.TempDir("/tmp", "")
+	baseDir, _ := os.MkdirTemp("", "pomo-test-")
+	t.Cleanup(func() {
+		if !t.Failed() {
+			os.RemoveAll(baseDir)
+		}
+	})
 	store, err := NewStore(path.Join(baseDir, "pomo.db"))
 	if err != nil {
 		t.Error(err)

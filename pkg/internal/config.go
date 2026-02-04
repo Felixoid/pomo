@@ -3,7 +3,6 @@ package pomo
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 
@@ -87,14 +86,14 @@ func (c *ColorMap) UnmarshalJSON(raw []byte) error {
 }
 
 func LoadConfig(configPath string, config *Config) error {
-	raw, err := ioutil.ReadFile(configPath)
+	raw, err := os.ReadFile(configPath)
 	if err != nil {
 		os.MkdirAll(path.Dir(configPath), 0755)
 		// Create an empty config file
 		// if it does not already exist.
 		if os.IsNotExist(err) {
 			raw, _ := json.Marshal(map[string]string{})
-			err := ioutil.WriteFile(configPath, raw, 0644)
+			err := os.WriteFile(configPath, raw, 0644)
 			if err != nil {
 				return err
 			}

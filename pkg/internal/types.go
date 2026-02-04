@@ -1,7 +1,6 @@
 package pomo
 
 import (
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -178,7 +177,7 @@ func NewXnotifier(iconPath string) Notifier {
 	_, err := os.Stat(iconPath)
 	if os.IsNotExist(err) {
 		raw := MustAsset("tomato-icon.png")
-		_ = ioutil.WriteFile(iconPath, raw, 0644)
+		_ = os.WriteFile(iconPath, raw, 0644)
 	}
 	return Xnotifier{
 		Notificator: notificator.New(notificator.Options{}),

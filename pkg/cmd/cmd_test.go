@@ -3,7 +3,6 @@ package cmd
 import (
 	"database/sql"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -20,7 +19,7 @@ func checkErr(t *testing.T, err error) {
 }
 
 func initTestConfig(t *testing.T) (*pomo.Store, *pomo.Config) {
-	tmpPath, err := ioutil.TempDir(os.TempDir(), "pomo-test")
+	tmpPath, err := os.MkdirTemp("", "pomo-test")
 	checkErr(t, err)
 	config := &pomo.Config{
 		DateTimeFmt: "2006-01-02 15:04",
