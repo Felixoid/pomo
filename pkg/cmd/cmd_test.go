@@ -19,8 +19,13 @@ func checkErr(t *testing.T, err error) {
 }
 
 func initTestConfig(t *testing.T) (*pomo.Store, *pomo.Config) {
-	tmpPath, err := os.MkdirTemp("", "pomo-test")
+	tmpPath, err := os.MkdirTemp("", "pomo-test-")
 	checkErr(t, err)
+	t.Cleanup(func() {
+		if !t.Failed() {
+			os.RemoveAll(tmpPath)
+		}
+	})
 	config := &pomo.Config{
 		DateTimeFmt: "2006-01-02 15:04",
 		BasePath:    tmpPath,
