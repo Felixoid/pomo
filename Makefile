@@ -1,4 +1,4 @@
-VERSION ?= $(shell git describe --tags 2>/dev/null)
+VERSION ?= $(shell git describe --tags --dirty --always 2>/dev/null)
 ifeq "$(VERSION)" ""
 	VERSION := UNKNOWN
 endif
@@ -14,6 +14,8 @@ LDFLAGS=\
 	bin/pomo
 
 default: bin/pomo test
+
+build: bin/pomo
 
 clean:
 	[[ -f bin/pomo ]] && rm bin/pomo || true
