@@ -172,7 +172,7 @@ func list(config *pomo.Config) func(*cli.Cmd) {
 		var (
 			asJSON     = cmd.BoolOpt("json", false, "output task history as JSON")
 			assend     = cmd.BoolOpt("assend", false, "sort tasks assending in age")
-			all        = cmd.BoolOpt("a all", true, "output all tasks")
+			all        = cmd.BoolOpt("a all", true, "output all tasks regardless of age")
 			unfinished = cmd.BoolOpt("u unfinished", false, "show only unfinished tasks")
 			finished   = cmd.BoolOpt("f finished", false, "show only finished tasks")
 			tags       = cmd.StringsOpt("t tag", []string{}, "filter by tag (can be specified multiple times)")
