@@ -55,7 +55,7 @@ func start(config *pomo.Config) func(*cli.Cmd) {
 			duration  = cmd.StringOpt("d duration", "25m", "duration of each stent")
 			pomodoros = cmd.IntOpt("p pomodoros", 4, "number of pomodoros")
 			message   = cmd.StringArg("MESSAGE", "", "descriptive name of the given task")
-			tags      = cmd.StringsOpt("t tag", []string{}, "tags associated with this task")
+			tags      = cmd.StringsOpt("t tag", []string{}, "tags associated with this task (can be specified multiple times)")
 		)
 		cmd.Action = func() {
 			parsed, err := time.ParseDuration(*duration)
@@ -96,7 +96,7 @@ func create(config *pomo.Config) func(*cli.Cmd) {
 			duration  = cmd.StringOpt("d duration", "25m", "duration of each stent")
 			pomodoros = cmd.IntOpt("p pomodoros", 4, "number of pomodoros")
 			message   = cmd.StringArg("MESSAGE", "", "descriptive name of the given task")
-			tags      = cmd.StringsOpt("t tag", []string{}, "tags associated with this task")
+			tags      = cmd.StringsOpt("t tag", []string{}, "tags associated with this task (can be specified multiple times)")
 		)
 		cmd.Action = func() {
 			parsed, err := time.ParseDuration(*duration)
@@ -239,7 +239,7 @@ pomo edit -f 1
 			duration  = cmd.StringOpt("d duration", "", "new duration of each stent")
 			pomodoros = cmd.IntOpt("p pomodoros", -1, "new number of pomodoros")
 			message   = cmd.StringOpt("m message", "", "new descriptive name of the task")
-			tags      = cmd.StringsOpt("t tag", []string{}, "new tags associated with this task")
+			tags      = cmd.StringsOpt("t tag", []string{}, "new tags associated with this task (can be specified multiple times)")
 			finish    = cmd.BoolOpt("f finish", false, "mark task as finished (set required pomodoros to current completed count)")
 		)
 		cmd.Action = func() {
