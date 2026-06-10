@@ -2,8 +2,8 @@ package pomo
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"time"
@@ -28,10 +28,16 @@ func (s *Server) listen() {
 		}
 		buf := make([]byte, 512)
 		// Ignore any content
-		conn.Read(buf)
+		if _, err := conn.Read(buf); err != nil {
+			log.Printf("server: read: %v", err)
+			_ = conn.Close()
+			continue
+		}
 		raw, _ := json.Marshal(s.runner.Status())
-		conn.Write(raw)
-		conn.Close()
+		if _, err := conn.Write(raw); err != nil {
+			log.Printf("server: write: %v", err)
+		}
+		_ = conn.Close()
 	}
 }
 
@@ -46,11 +52,15 @@ func (s *Server) push() {
 		status := s.runner.Status()
 		if s.publishJson {
 			raw, _ := json.Marshal(status)
-			json.NewEncoder(conn).Encode(raw)
+			if err := json.NewEncoder(conn).Encode(raw); err != nil {
+				log.Printf("server: publish encode: %v", err)
+			}
 		} else {
-			conn.Write([]byte(FormatStatus(*status) + "\n"))
+			if _, err := conn.Write([]byte(FormatStatus(*status) + "\n")); err != nil {
+				log.Printf("server: publish write: %v", err)
+			}
 		}
-		conn.Close()
+		_ = conn.Close()
 		<-ticker.C
 	}
 }
@@ -67,7 +77,9 @@ func (s *Server) Start() {
 func (s *Server) Stop() {
 	s.running = false
 	if s.listener != nil {
-		s.listener.Close()
+		if err := s.listener.Close(); err != nil {
+			log.Printf("server: listener close: %v", err)
+		}
 	}
 }
 
@@ -77,7 +89,9 @@ func NewServer(runner *TaskRunner, config *Config) (*Server, error) {
 		_, err := net.Dial("unix", config.SocketPath)
 		//if error then sock file was saved after crash
 		if err != nil {
-			os.Remove(config.SocketPath)
+			if rmErr := os.Remove(config.SocketPath); rmErr != nil {
+				return nil, fmt.Errorf("remove stale socket %s: %w", config.SocketPath, rmErr)
+			}
 		} else {
 			// another instance of pomo is running
 			return nil, fmt.Errorf("socket %s is already in use", config.SocketPath)
@@ -108,15 +122,24 @@ type Client struct {
 
 func (c Client) read(statusCh chan *Status) {
 	buf := make([]byte, 512)
-	n, _ := c.conn.Read(buf)
+	n, err := c.conn.Read(buf)
+	if err != nil {
+		log.Printf("client: read: %v", err)
+		statusCh <- &Status{}
+		return
+	}
 	status := &Status{}
-	json.Unmarshal(buf[0:n], status)
+	if err := json.Unmarshal(buf[0:n], status); err != nil {
+		log.Printf("client: unmarshal: %v", err)
+	}
 	statusCh <- status
 }
 
 func (c Client) Status() (*Status, error) {
 	statusCh := make(chan *Status)
-	c.conn.Write([]byte("status"))
+	if _, err := c.conn.Write([]byte("status")); err != nil {
+		return nil, fmt.Errorf("client: write: %w", err)
+	}
 	go c.read(statusCh)
 	return <-statusCh, nil
 }

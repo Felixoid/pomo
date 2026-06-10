@@ -405,6 +405,7 @@ func New(config *pomo.Config) *cli.Cli {
 		path = app.StringOpt("p path", defaultConfigPath(), "path to the pomo config directory")
 	)
 	app.Before = func() {
+		pomo.InitLogger()
 		maybe(pomo.LoadConfig(*path, config))
 	}
 	app.Version("v version", pomo.Version)
@@ -420,4 +421,10 @@ func New(config *pomo.Config) *cli.Cli {
 	return app
 }
 
-func Run() { New(&pomo.Config{}).Run(os.Args) }
+func Run() {
+	defer pomo.FlushLog(os.Stderr)
+	if err := New(&pomo.Config{}).Run(os.Args); err != nil {
+		fmt.Fprintf(os.Stderr, "Error:\n%s\n", err)
+		os.Exit(1)
+	}
+}

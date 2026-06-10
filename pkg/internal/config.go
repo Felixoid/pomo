@@ -88,7 +88,9 @@ func (c *ColorMap) UnmarshalJSON(raw []byte) error {
 func LoadConfig(configPath string, config *Config) error {
 	raw, err := os.ReadFile(configPath)
 	if err != nil {
-		os.MkdirAll(path.Dir(configPath), 0755)
+		if mkErr := os.MkdirAll(path.Dir(configPath), 0755); mkErr != nil {
+			return mkErr
+		}
 		// Create an empty config file
 		// if it does not already exist.
 		if os.IsNotExist(err) {
