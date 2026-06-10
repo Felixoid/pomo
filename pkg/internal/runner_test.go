@@ -46,7 +46,9 @@ func TestStoreUpdateTask(t *testing.T) {
 	baseDir, _ := os.MkdirTemp("", "pomo-test-")
 	t.Cleanup(func() {
 		if !t.Failed() {
-			os.RemoveAll(baseDir)
+			if err := os.RemoveAll(baseDir); err != nil {
+				t.Logf("cleanup: %v", err)
+			}
 		}
 	})
 	store, err := NewStore(path.Join(baseDir, "pomo.db"))
@@ -57,7 +59,11 @@ func TestStoreUpdateTask(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	defer store.Close()
+	defer func() {
+		if err := store.Close(); err != nil {
+			t.Logf("store close: %v", err)
+		}
+	}()
 
 	// Create a task
 	var taskID int

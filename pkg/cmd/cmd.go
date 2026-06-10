@@ -62,7 +62,7 @@ func start(config *pomo.Config) func(*cli.Cmd) {
 			maybe(err)
 			db, err := pomo.NewStore(config.DBPath)
 			maybe(err)
-			defer db.Close()
+			defer func() { maybe(db.Close()) }()
 			task := &pomo.Task{
 				Message:    *message,
 				Tags:       *tags,
@@ -103,7 +103,7 @@ func create(config *pomo.Config) func(*cli.Cmd) {
 			maybe(err)
 			db, err := pomo.NewStore(config.DBPath)
 			maybe(err)
-			defer db.Close()
+			defer func() { maybe(db.Close()) }()
 			task := &pomo.Task{
 				Message:    *message,
 				Tags:       *tags,
@@ -132,7 +132,7 @@ func begin(config *pomo.Config) func(*cli.Cmd) {
 		cmd.Action = func() {
 			db, err := pomo.NewStore(config.DBPath)
 			maybe(err)
-			defer db.Close()
+			defer func() { maybe(db.Close()) }()
 			var task *pomo.Task
 			maybe(db.With(func(tx *sql.Tx) error {
 				read, err := db.ReadTask(tx, *taskId)
@@ -160,7 +160,7 @@ func initialize(config *pomo.Config) func(*cli.Cmd) {
 		cmd.Action = func() {
 			db, err := pomo.NewStore(config.DBPath)
 			maybe(err)
-			defer db.Close()
+			defer func() { maybe(db.Close()) }()
 			maybe(pomo.InitDB(db))
 		}
 	}
@@ -184,7 +184,7 @@ func list(config *pomo.Config) func(*cli.Cmd) {
 			maybe(err)
 			db, err := pomo.NewStore(config.DBPath)
 			maybe(err)
-			defer db.Close()
+			defer func() { maybe(db.Close()) }()
 			maybe(db.With(func(tx *sql.Tx) error {
 				tasks, err := db.ReadTasks(tx)
 				maybe(err)
@@ -250,7 +250,7 @@ pomo edit -f 1
 
 			db, err := pomo.NewStore(config.DBPath)
 			maybe(err)
-			defer db.Close()
+			defer func() { maybe(db.Close()) }()
 
 			maybe(db.With(func(tx *sql.Tx) error {
 				task, err := db.ReadTask(tx, *taskID)
@@ -337,7 +337,7 @@ pomo delete 5 10 20
 
 			db, err := pomo.NewStore(config.DBPath)
 			maybe(err)
-			defer db.Close()
+			defer func() { maybe(db.Close()) }()
 			maybe(db.With(func(tx *sql.Tx) error {
 				for _, expr := range *taskIDs {
 					start, end, err := parseRange(expr)
@@ -373,7 +373,7 @@ func _status(config *pomo.Config) func(*cli.Cmd) {
 				}
 				return
 			}
-			defer client.Close()
+			defer func() { maybe(client.Close()) }()
 			status, err := client.Status()
 			maybe(err)
 

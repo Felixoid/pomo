@@ -64,7 +64,7 @@ func TestPomoEdit(t *testing.T) {
 	// Edit duration
 	cmd = New(config)
 	checkErr(t, cmd.Run([]string{"pomo", "edit", "-d", "30m", "1"}))
-	store.With(func(tx *sql.Tx) error {
+	checkErr(t, store.With(func(tx *sql.Tx) error {
 		task, err := store.ReadTask(tx, 1)
 		checkErr(t, err)
 		if task.Duration.Minutes() != 30 {
@@ -74,48 +74,48 @@ func TestPomoEdit(t *testing.T) {
 			checkErr(t, fmt.Errorf("message should be unchanged, got %s", task.Message))
 		}
 		return nil
-	})
+	}))
 
 	// Edit message
 	cmd = New(config)
 	checkErr(t, cmd.Run([]string{"pomo", "edit", "-m", "updated message", "1"}))
-	store.With(func(tx *sql.Tx) error {
+	checkErr(t, store.With(func(tx *sql.Tx) error {
 		task, err := store.ReadTask(tx, 1)
 		checkErr(t, err)
 		if task.Message != "updated message" {
 			checkErr(t, fmt.Errorf("message should be 'updated message', got %s", task.Message))
 		}
 		return nil
-	})
+	}))
 
 	// Edit pomodoros
 	cmd = New(config)
 	checkErr(t, cmd.Run([]string{"pomo", "edit", "-p", "6", "1"}))
-	store.With(func(tx *sql.Tx) error {
+	checkErr(t, store.With(func(tx *sql.Tx) error {
 		task, err := store.ReadTask(tx, 1)
 		checkErr(t, err)
 		if task.NPomodoros != 6 {
 			checkErr(t, fmt.Errorf("pomodoros should be 6, got %d", task.NPomodoros))
 		}
 		return nil
-	})
+	}))
 
 	// Edit tags
 	cmd = New(config)
 	checkErr(t, cmd.Run([]string{"pomo", "edit", "-t", "tag1", "-t", "tag2", "1"}))
-	store.With(func(tx *sql.Tx) error {
+	checkErr(t, store.With(func(tx *sql.Tx) error {
 		task, err := store.ReadTask(tx, 1)
 		checkErr(t, err)
 		if len(task.Tags) != 2 || task.Tags[0] != "tag1" || task.Tags[1] != "tag2" {
 			checkErr(t, fmt.Errorf("tags should be [tag1, tag2], got %v", task.Tags))
 		}
 		return nil
-	})
+	}))
 
 	// Edit multiple fields at once
 	cmd = New(config)
 	checkErr(t, cmd.Run([]string{"pomo", "edit", "-d", "45m", "-p", "8", "-m", "final message", "1"}))
-	store.With(func(tx *sql.Tx) error {
+	checkErr(t, store.With(func(tx *sql.Tx) error {
 		task, err := store.ReadTask(tx, 1)
 		checkErr(t, err)
 		if task.Duration.Minutes() != 45 {
@@ -128,7 +128,7 @@ func TestPomoEdit(t *testing.T) {
 			checkErr(t, fmt.Errorf("message should be 'final message', got %s", task.Message))
 		}
 		return nil
-	})
+	}))
 }
 
 func TestPomoEditErrors(t *testing.T) {
