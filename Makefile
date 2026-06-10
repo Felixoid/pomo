@@ -12,6 +12,7 @@ LDFLAGS=\
 	pomo-build \
 	readme \
 	lint \
+	hooks-install \
 	bin/pomo
 
 default: bin/pomo test
@@ -21,11 +22,11 @@ build: bin/pomo
 clean:
 	[[ -f bin/pomo ]] && rm bin/pomo || true
 
-bin/pomo:
+bin/pomo: hooks-install
 	cd cmd/pomo && \
 	go build -ldflags '${LDFLAGS}' -o ../../$@
 
-test:
+test: hooks-install
 	go test ./...
 
 lint:
@@ -34,6 +35,12 @@ lint:
 		exit 1; \
 	}
 	golangci-lint run
+
+hooks-install:
+	@[ "$$(git config --local --get core.hooksPath 2>/dev/null)" = ".githooks" ] || { \
+		git config --local core.hooksPath .githooks && \
+		echo "git hooks installed (.githooks)"; \
+	}
 
 install:
 	go install ./cmd/...
