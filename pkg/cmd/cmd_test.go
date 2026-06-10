@@ -23,7 +23,9 @@ func initTestConfig(t *testing.T) (*pomo.Store, *pomo.Config) {
 	checkErr(t, err)
 	t.Cleanup(func() {
 		if !t.Failed() {
-			os.RemoveAll(tmpPath)
+			if err := os.RemoveAll(tmpPath); err != nil {
+				t.Logf("cleanup: %v", err)
+			}
 		}
 	})
 	config := &pomo.Config{
@@ -44,14 +46,14 @@ func TestPomoCreate(t *testing.T) {
 	cmd := New(config)
 	checkErr(t, cmd.Run([]string{"pomo", "create", "fuu"}))
 	// verify the task was created
-	store.With(func(tx *sql.Tx) error {
+	checkErr(t, store.With(func(tx *sql.Tx) error {
 		task, err := store.ReadTask(tx, 1)
 		checkErr(t, err)
 		if task.Message != "fuu" {
 			checkErr(t, fmt.Errorf("task should have message fuu, got %s", task.Message))
 		}
 		return nil
-	})
+	}))
 }
 
 func TestPomoEdit(t *testing.T) {

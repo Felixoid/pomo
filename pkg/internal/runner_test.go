@@ -13,7 +13,9 @@ func TestTaskRunner(t *testing.T) {
 	baseDir, _ := os.MkdirTemp("", "pomo-test-")
 	t.Cleanup(func() {
 		if !t.Failed() {
-			os.RemoveAll(baseDir)
+			if err := os.RemoveAll(baseDir); err != nil {
+				t.Logf("cleanup: %v", err)
+			}
 		}
 	})
 	store, err := NewStore(path.Join(baseDir, "pomo.db"))
@@ -27,7 +29,7 @@ func TestTaskRunner(t *testing.T) {
 	runner, err := NewMockedTaskRunner(&Task{
 		Duration:   time.Second * 2,
 		NPomodoros: 2,
-		Message:    fmt.Sprint("Test Task"),
+		Message:    "Test Task",
 	}, store, NoopNotifier{})
 	if err != nil {
 		t.Error(err)
