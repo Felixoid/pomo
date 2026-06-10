@@ -11,6 +11,7 @@ LDFLAGS=\
 	docs \
 	pomo-build \
 	readme \
+	lint \
 	bin/pomo
 
 default: bin/pomo test
@@ -26,7 +27,13 @@ bin/pomo:
 
 test:
 	go test ./...
-	go vet ./...
+
+lint:
+	@command -v golangci-lint >/dev/null || { \
+		echo "golangci-lint not found — install: https://golangci-lint.run/welcome/install/"; \
+		exit 1; \
+	}
+	golangci-lint run
 
 install:
 	go install ./cmd/...
