@@ -80,7 +80,7 @@ func NewServer(runner *TaskRunner, config *Config) (*Server, error) {
 			os.Remove(config.SocketPath)
 		} else {
 			// another instance of pomo is running
-			return nil, errors.New(fmt.Sprintf("Socket %s is already in use", config.SocketPath))
+			return nil, fmt.Errorf("socket %s is already in use", config.SocketPath)
 		}
 	}
 	listener, err := net.Listen("unix", config.SocketPath)
