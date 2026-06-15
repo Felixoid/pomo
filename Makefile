@@ -4,7 +4,7 @@ ifeq "$(VERSION)" ""
 endif
 
 LDFLAGS=\
-	-X codeberg.org/kevinschoon/pomo/pkg/internal.Version=$(VERSION)
+	-X github.com/Felixoid/pomo/pkg/internal.Version=$(VERSION)
 
 .PHONY: \
 	test \
