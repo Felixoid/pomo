@@ -87,9 +87,7 @@ func (s Store) ReadTasks(tx *sql.Tx) ([]*Task, error) {
 		if err != nil {
 			return nil, err
 		}
-		for _, pomodoro := range pomodoros {
-			task.Pomodoros = append(task.Pomodoros, pomodoro)
-		}
+		task.Pomodoros = append(task.Pomodoros, pomodoros...)
 		tasks = append(tasks, task)
 	}
 	return tasks, nil
@@ -134,9 +132,7 @@ func (s Store) ReadTask(tx *sql.Tx, taskID int) (*Task, error) {
 	if err != nil {
 		return nil, err
 	}
-	for _, pomodoro := range pomodoros {
-		task.Pomodoros = append(task.Pomodoros, pomodoro)
-	}
+	task.Pomodoros = append(task.Pomodoros, pomodoros...)
 	return task, nil
 }
 

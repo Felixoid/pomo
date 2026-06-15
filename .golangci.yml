@@ -1,0 +1,21 @@
+version: "2"
+linters:
+  default: standard
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+  settings:
+    errcheck:
+      exclude-functions:
+        - (io.Closer).Close
+        - (github.com/Felixoid/pomo/pkg/internal.Store).Close
+        - (github.com/Felixoid/pomo/pkg/internal.Client).Close
+        - (*database/sql.Tx).Rollback
+        - (*github.com/fatih/color.Color).Printf
+        - github.com/fatih/color.Printf
+formatters:
+  enable:
+    - gofmt

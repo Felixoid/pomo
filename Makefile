@@ -1,4 +1,4 @@
-VERSION ?= $(shell git describe --tags 2>/dev/null)
+VERSION ?= $(shell git describe --tags --dirty --always 2>/dev/null)
 ifeq "$(VERSION)" ""
 	VERSION := UNKNOWN
 endif
@@ -11,20 +11,36 @@ LDFLAGS=\
 	docs \
 	pomo-build \
 	readme \
+	lint \
+	hooks-install \
 	bin/pomo
 
 default: bin/pomo test
 
+build: bin/pomo
+
 clean:
 	[[ -f bin/pomo ]] && rm bin/pomo || true
 
-bin/pomo:
+bin/pomo: hooks-install
 	cd cmd/pomo && \
 	go build -ldflags '${LDFLAGS}' -o ../../$@
 
-test:
+test: hooks-install
 	go test ./...
-	go vet ./...
+
+lint:
+	@command -v golangci-lint >/dev/null || { \
+		echo "golangci-lint not found — install: https://golangci-lint.run/welcome/install/"; \
+		exit 1; \
+	}
+	golangci-lint run
+
+hooks-install:
+	@[ "$$(git config --local --get core.hooksPath 2>/dev/null)" = ".githooks" ] || { \
+		git config --local core.hooksPath .githooks && \
+		echo "git hooks installed (.githooks)"; \
+	}
 
 install:
 	go install ./cmd/...

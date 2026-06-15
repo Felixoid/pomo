@@ -119,8 +119,8 @@ func StartUI(runner *TaskRunner) {
 
 	events := ui.PollEvents()
 
+	laststate := runner.state
 	for {
-		laststate := runner.state
 		select {
 		case e := <-events:
 			switch e.ID {

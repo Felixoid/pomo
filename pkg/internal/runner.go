@@ -3,6 +3,7 @@ package pomo
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"sync"
@@ -65,7 +66,11 @@ func NewTaskRunner(task *Task, config *Config) (*TaskRunner, error) {
 }
 
 func (t *TaskRunner) Start() {
-	go t.run()
+	go func() {
+		if err := t.run(); err != nil {
+			log.Printf("runner: %v", err)
+		}
+	}()
 }
 
 func (t *TaskRunner) TimeRemaining() time.Duration {
@@ -80,7 +85,11 @@ func (t *TaskRunner) SetState(state State) {
 	t.state = state
 	// execute onEvent command if variable is set
 	if t.onEvent != nil {
-		go t.runOnEvent()
+		go func() {
+			if err := t.runOnEvent(); err != nil {
+				log.Printf("onEvent: %v", err)
+			}
+		}()
 	}
 }
 
@@ -161,7 +170,9 @@ func (t *TaskRunner) run() error {
 			break
 		}
 		t.SetState(BREAKING)
-		t.notifier.Notify("Pomo", "It is time to take a break!")
+		if err := t.notifier.Notify("Pomo", "It is time to take a break!"); err != nil {
+			log.Printf("notify: %v", err)
+		}
 		// Reset the duration incase it
 		// was paused.
 		t.duration = t.origDuration
@@ -169,7 +180,9 @@ func (t *TaskRunner) run() error {
 		<-t.toggle
 
 	}
-	t.notifier.Notify("Pomo", "Pomo session has completed!")
+	if err := t.notifier.Notify("Pomo", "Pomo session has completed!"); err != nil {
+		log.Printf("notify: %v", err)
+	}
 	t.SetState(COMPLETE)
 	return nil
 }

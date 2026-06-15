@@ -1,12 +1,15 @@
 package pomo
 
 import (
-	"io/ioutil"
+	_ "embed"
 	"os"
 	"time"
 
 	"github.com/0xAX/notificator"
 )
+
+//go:embed tomato-icon.png
+var tomatoIconPNG []byte
 
 type State int
 
@@ -177,8 +180,7 @@ func NewXnotifier(iconPath string) Notifier {
 	// doesn't already exist.
 	_, err := os.Stat(iconPath)
 	if os.IsNotExist(err) {
-		raw := MustAsset("tomato-icon.png")
-		_ = ioutil.WriteFile(iconPath, raw, 0644)
+		_ = os.WriteFile(iconPath, tomatoIconPNG, 0644)
 	}
 	return Xnotifier{
 		Notificator: notificator.New(notificator.Options{}),
