@@ -1,4 +1,4 @@
-module codeberg.org/kevinschoon/pomo
+module github.com/Felixoid/pomo
 
 go 1.23
 

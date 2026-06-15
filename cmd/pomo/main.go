@@ -1,7 +1,7 @@
 package main
 
-import "codeberg.org/kevinschoon/pomo/pkg/cmd"
+import "github.com/Felixoid/pomo/pkg/cmd"
 
 func main() {
-    cmd.Run()
+	cmd.Run()
 }
