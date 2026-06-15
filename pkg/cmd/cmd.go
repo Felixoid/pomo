@@ -55,7 +55,7 @@ func start(config *pomo.Config) func(*cli.Cmd) {
 			duration  = cmd.StringOpt("d duration", "25m", "duration of each stent")
 			pomodoros = cmd.IntOpt("p pomodoros", 4, "number of pomodoros")
 			message   = cmd.StringArg("MESSAGE", "", "descriptive name of the given task")
-			tags      = cmd.StringsOpt("t tag", []string{}, "tags associated with this task")
+			tags      = cmd.StringsOpt("t tag", []string{}, "tags associated with this task (can be specified multiple times)")
 		)
 		cmd.Action = func() {
 			parsed, err := time.ParseDuration(*duration)
@@ -96,7 +96,7 @@ func create(config *pomo.Config) func(*cli.Cmd) {
 			duration  = cmd.StringOpt("d duration", "25m", "duration of each stent")
 			pomodoros = cmd.IntOpt("p pomodoros", 4, "number of pomodoros")
 			message   = cmd.StringArg("MESSAGE", "", "descriptive name of the given task")
-			tags      = cmd.StringsOpt("t tag", []string{}, "tags associated with this task")
+			tags      = cmd.StringsOpt("t tag", []string{}, "tags associated with this task (can be specified multiple times)")
 		)
 		cmd.Action = func() {
 			parsed, err := time.ParseDuration(*duration)
@@ -170,11 +170,14 @@ func list(config *pomo.Config) func(*cli.Cmd) {
 	return func(cmd *cli.Cmd) {
 		cmd.Spec = "[OPTIONS]"
 		var (
-			asJSON   = cmd.BoolOpt("json", false, "output task history as JSON")
-			assend   = cmd.BoolOpt("assend", false, "sort tasks assending in age")
-			all      = cmd.BoolOpt("a all", true, "output all tasks")
-			limit    = cmd.IntOpt("n limit", 0, "limit the number of results by n")
-			duration = cmd.StringOpt("d duration", "24h", "show tasks within this duration")
+			asJSON     = cmd.BoolOpt("json", false, "output task history as JSON")
+			assend     = cmd.BoolOpt("assend", false, "sort tasks assending in age")
+			all        = cmd.BoolOpt("a all", true, "output all tasks regardless of age")
+			unfinished = cmd.BoolOpt("u unfinished", false, "show only unfinished tasks")
+			finished   = cmd.BoolOpt("f finished", false, "show only finished tasks")
+			tags       = cmd.StringsOpt("t tag", []string{}, "filter by tag (can be specified multiple times)")
+			limit      = cmd.IntOpt("n limit", 0, "limit the number of results by n")
+			duration   = cmd.StringOpt("d duration", "24h", "show tasks within this duration")
 		)
 		cmd.Action = func() {
 			duration, err := time.ParseDuration(*duration)
@@ -191,6 +194,15 @@ func list(config *pomo.Config) func(*cli.Cmd) {
 				if !*all {
 					tasks = pomo.After(time.Now().Add(-duration), tasks)
 				}
+				if *unfinished {
+					tasks = pomo.Unfinished(tasks)
+				}
+				if *finished {
+					tasks = pomo.Finished(tasks)
+				}
+				if len(*tags) > 0 {
+					tasks = pomo.WithTag(*tags, tasks)
+				}
 				if *limit > 0 && (len(tasks) > *limit) {
 					tasks = tasks[0:*limit]
 				}
@@ -200,6 +212,106 @@ func list(config *pomo.Config) func(*cli.Cmd) {
 				}
 				maybe(err)
 				pomo.SummerizeTasks(config, tasks)
+				return nil
+			}))
+		}
+	}
+}
+
+func edit(config *pomo.Config) func(*cli.Cmd) {
+	return func(cmd *cli.Cmd) {
+		cmd.Spec = "[OPTIONS] TASK_ID"
+		cmd.LongDesc = `
+edit an existing task by ID
+
+## Examples:
+# edit task duration
+pomo edit -d 30m 1
+# edit task message
+pomo edit -m "updated description" 1
+# edit multiple fields
+pomo edit -d 45m -p 6 -m "new message" 1
+# mark task as finished
+pomo edit -f 1
+`
+		var (
+			taskID    = cmd.IntArg("TASK_ID", -1, "ID of task to edit")
+			duration  = cmd.StringOpt("d duration", "", "new duration of each stent")
+			pomodoros = cmd.IntOpt("p pomodoros", -1, "new number of pomodoros")
+			message   = cmd.StringOpt("m message", "", "new descriptive name of the task")
+			tags      = cmd.StringsOpt("t tag", []string{}, "new tags associated with this task (can be specified multiple times)")
+			finish    = cmd.BoolOpt("f finish", false, "mark task as finished (set required pomodoros to current completed count)")
+		)
+		cmd.Action = func() {
+			if *taskID == -1 {
+				fmt.Println("Error: TASK_ID is required")
+				os.Exit(1)
+			}
+
+			db, err := pomo.NewStore(config.DBPath)
+			maybe(err)
+			defer db.Close()
+
+			maybe(db.With(func(tx *sql.Tx) error {
+				task, err := db.ReadTask(tx, *taskID)
+				if err != nil {
+					return fmt.Errorf("failed to read task: %w", err)
+				}
+
+				// Store original values for summary
+				origDuration := task.Duration
+				origPomodoros := task.NPomodoros
+				origMessage := task.Message
+				origTags := make([]string, len(task.Tags))
+				copy(origTags, task.Tags)
+
+				var changes strings.Builder
+				updated := false
+
+				if *duration != "" {
+					parsed, err := time.ParseDuration(*duration)
+					if err != nil {
+						return fmt.Errorf("invalid duration: %w", err)
+					}
+					task.Duration = parsed
+					fmt.Fprintf(&changes, "  duration: %v -> %v\n", origDuration, parsed)
+					updated = true
+				}
+
+				if *pomodoros != -1 {
+					task.NPomodoros = *pomodoros
+					fmt.Fprintf(&changes, "  pomodoros: %d -> %d\n", origPomodoros, *pomodoros)
+					updated = true
+				}
+
+				if *message != "" {
+					task.Message = *message
+					fmt.Fprintf(&changes, "  message: %q -> %q\n", origMessage, *message)
+					updated = true
+				}
+
+				if len(*tags) > 0 {
+					task.Tags = *tags
+					fmt.Fprintf(&changes, "  tags: %v -> %v\n", origTags, *tags)
+					updated = true
+				}
+
+				if *finish {
+					task.NPomodoros = len(task.Pomodoros)
+					fmt.Fprintf(&changes, "  pomodoros: %d -> %d (marked as finished)\n", origPomodoros, len(task.Pomodoros))
+					updated = true
+				}
+
+				if !updated {
+					return fmt.Errorf("no fields specified for update. Use -d, -p, -m, -t, or -f flags")
+				}
+
+				err = db.UpdateTask(tx, *taskID, *task)
+				if err != nil {
+					return fmt.Errorf("failed to update task: %w", err)
+				}
+
+				fmt.Printf("Updated task %d:\n%s", *taskID, changes.String())
 				return nil
 			}))
 		}
@@ -302,6 +414,7 @@ func New(config *pomo.Config) *cli.Cli {
 	app.Command("create c", "create a new task without starting", create(config))
 	app.Command("begin b", "begin requested pomodoro", begin(config))
 	app.Command("list l", "list historical tasks", list(config))
+	app.Command("edit e", "edit a stored task", edit(config))
 	app.Command("delete d", "delete a stored task", _delete(config))
 	app.Command("status st", "output the current status", _status(config))
 	return app
