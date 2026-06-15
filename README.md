@@ -4,7 +4,7 @@
 
 `pomo` is a simple CLI for using the [Pomodoro Technique](https://en.wikipedia.org/wiki/Pomodoro_Technique). There are [some](https://taskwarrior.org/) [amazing](https://todoist.com/) task management systems but `pomo` is more of a task *execution* or [timeboxing](https://en.wikipedia.org/wiki/Timeboxing) system. `pomo` helps you track what you did, how long it took you to do it, and how much effort you expect it to take.
 
-This is a fork of the original [pomo](https://codeberg.org/kevinschoon/pomo) project by [Kevin Schoon](https://codeberg.org/kevinschoon/pomo/issues/90).
+This is a fork of the original [pomo](https://codeberg.org/kevinschoon/pomo) project by [Kevin Schoon](https://codeberg.org/kevinschoon/pomo/issues/90) (the first repo on [github](https://github.com/kevinschoon/pomo)).
 
 ## Background
 
