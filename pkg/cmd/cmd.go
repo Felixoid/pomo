@@ -122,7 +122,7 @@ func create(config *pomo.Config) func(*cli.Cmd) {
 	}
 }
 
-func begin(config *pomo.Config) func(*cli.Cmd) {
+func work(config *pomo.Config) func(*cli.Cmd) {
 	return func(cmd *cli.Cmd) {
 		cmd.Spec = "[OPTIONS] TASK_ID"
 		var (
@@ -150,6 +150,18 @@ func begin(config *pomo.Config) func(*cli.Cmd) {
 			defer server.Stop()
 			runner.Start()
 			pomo.StartUI(runner)
+		}
+	}
+}
+
+func begin(config *pomo.Config) func(*cli.Cmd) {
+	return func(cmd *cli.Cmd) {
+		cmd.Hidden = true
+		work(config)(cmd)
+		inner := cmd.Action
+		cmd.Action = func() {
+			fmt.Fprintln(os.Stderr, `pomo: "begin" is deprecated and will be removed in a future version, use "work" instead`)
+			inner()
 		}
 	}
 }
@@ -413,7 +425,8 @@ func New(config *pomo.Config) *cli.Cli {
 	app.Command("init", "initialize the sqlite database", initialize(config))
 	app.Command("config cf", "display the current configuration", _config(config))
 	app.Command("create c", "create a new task without starting", create(config))
-	app.Command("begin b", "begin requested pomodoro", begin(config))
+	app.Command("work w", "work on an existing task", work(config))
+	app.Command("begin b", "[deprecated: use work] begin requested pomodoro", begin(config))
 	app.Command("list l", "list historical tasks", list(config))
 	app.Command("edit e", "edit a stored task", edit(config))
 	app.Command("delete d", "delete a stored task", _delete(config))
